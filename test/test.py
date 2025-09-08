@@ -6,35 +6,46 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 
 
-@cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start")
+async def insert_coin(dut, coin):
+    """Helper: insert a coin (2-bit encoding: 01=5, 10=10, 11=20)"""
+    dut.ui_in.value = coin
+    await ClockCycles(dut.clk, 1)
+    dut.ui_in.value = 0
+    await ClockCycles(dut.clk, 1)
 
-    # Set the clock period to 10 us (100 KHz)
+
+@cocotb.test()
+async def test_vending_machine(dut):
+    dut._log.info("Start Vending Machine Test")
+
+    # Create a clock: 10us period (100kHz)
     clock = Clock(dut.clk, 10, units="us")
     cocotb.start_soon(clock.start())
 
     # Reset
-    dut._log.info("Reset")
     dut.ena.value = 1
     dut.ui_in.value = 0
     dut.uio_in.value = 0
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
+    await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
+    dut._log.info("Reset complete")
 
-    dut._log.info("Test project behavior")
+    # Case 1: Insert 5 + 10 = 15 → dispense
+    await insert_coin(dut, 0b01)  # 5
+    dut._log.info(f"After 5: balance={int(dut.uo_out.value) >> 1}, dispense={dut.uo_out.value & 1}")
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
+    await insert_coin(dut, 0b10)  # 10
+    dut._log.info(f"After 10: balance={int(dut.uo_out.value) >> 1}, dispense={dut.uo_out.value & 1}")
 
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value & 1 == 1, "Should dispense product at 15 credits"
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
+    # Case 2: Insert 20 directly → dispense
+    await insert_coin(dut, 0b11)  # 20
+    dut._log.info(f"After 20: balance={int(dut.uo_out.value) >> 1}, dispense={dut.uo_out.value & 1}")
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    assert dut.uo_out.value & 1 == 1, "Should dispense product at 20 credits"
+
+    # Extra wait cycles
+    await ClockCycles(dut.clk, 5)
+    dut._log.info("Vending Machine Test Complete")
