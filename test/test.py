@@ -4,7 +4,6 @@ from cocotb.clock import Clock
 
 
 def safe_int(value):
-    """Convert cocotb BinaryValue to int, resolving X/Z to 0."""
     binstr = value.binstr
     if "x" in binstr or "z" in binstr:
         return 0
@@ -20,15 +19,15 @@ async def reset_dut(dut):
 
 
 async def check_dispense(dut, msg):
-    """Check that dispense goes high exactly one cycle after enough coins."""
-    await ClockCycles(dut.clk, 1)  # FSM transitions into DISP here
+    """Wait two cycles: first for state transition, second for dispense output."""
+    await ClockCycles(dut.clk, 2)
     uo_val = safe_int(dut.uo_out.value)
     balance = uo_val >> 1
     dispense = uo_val & 1
     dut._log.info(f"{msg}: balance={balance}, dispense={dispense}")
     assert dispense == 1, f"{msg} -> expected dispense=1"
 
-    # One more cycle: dispense should clear
+    # Next cycle, dispense must clear
     await ClockCycles(dut.clk, 1)
     uo_val = safe_int(dut.uo_out.value)
     dispense = uo_val & 1
@@ -37,20 +36,17 @@ async def check_dispense(dut, msg):
 
 @cocotb.test()
 async def test_vending_machine(dut):
-    # Start clock
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # Reset DUT
     await reset_dut(dut)
 
-    # --- Insert 5 ---
+    # Insert 5
     dut.ui_in.value = 0b01
     await ClockCycles(dut.clk, 1)
 
-    # --- Insert 10 (total=15 → should dispense next cycle) ---
+    # Insert 10 → should dispense
     dut.ui_in.value = 0b10
     await check_dispense(dut, "After 5+10")
 
-    # --- Insert 20 directly (should dispense next cycle) ---
+    # Insert 20 directly → should dispense
     dut.ui_in.value = 0b11
     await check_dispense(dut, "After 20")
