@@ -1,14 +1,14 @@
 # Tiny Tapeout project information
 project:
-  title:        ""      # Project title
-  author:       ""      # Your name
-  discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
-  language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
+  title:        "FSM Vending Machine"
+  author:       "Jeet"
+  discord:      ""   # optional
+  description:  "A simple vending machine FSM that accepts coins (5, 10, 20) and dispenses when credit >= 15"
+  language:     "Verilog"
+  clock_hz:     100000   # 100 KHz test clock (as in testbench)
 
   # How many tiles your design occupies? A single tile is about 167x108 uM.
-  tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
+  tiles: "1x1"
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
   top_module:  "tt_um_example"
@@ -20,37 +20,37 @@ project:
     - "project.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
-# This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
+# This section is for the datasheet/website. Use descriptive names.
 pinout:
   # Inputs
-  ui[0]: ""
-  ui[1]: ""
-  ui[2]: ""
-  ui[3]: ""
-  ui[4]: ""
-  ui[5]: ""
-  ui[6]: ""
-  ui[7]: ""
+  ui[0]: "coin[0]"       # LSB of coin input (00=none, 01=5, 10=10, 11=20)
+  ui[1]: "coin[1]"       # MSB of coin input
+  ui[2]: ""              # unused
+  ui[3]: ""              # unused
+  ui[4]: ""              # unused
+  ui[5]: ""              # unused
+  ui[6]: ""              # unused
+  ui[7]: ""              # unused
 
   # Outputs
-  uo[0]: ""
-  uo[1]: ""
-  uo[2]: ""
-  uo[3]: ""
-  uo[4]: ""
-  uo[5]: ""
-  uo[6]: ""
-  uo[7]: ""
+  uo[0]: "dispense"      # High for 1 cycle when product is dispensed
+  uo[1]: "balance[0]"    # balance debug (LSB)
+  uo[2]: "balance[1]"
+  uo[3]: "balance[2]"
+  uo[4]: "balance[3]"
+  uo[5]: "balance[4]"
+  uo[6]: "balance[5]"
+  uo[7]: "balance[6]"    # balance debug (MSB)
 
   # Bidirectional pins
-  uio[0]: ""
-  uio[1]: ""
-  uio[2]: ""
-  uio[3]: ""
-  uio[4]: ""
-  uio[5]: ""
-  uio[6]: ""
-  uio[7]: ""
+  uio[0]: ""             # unused
+  uio[1]: ""             # unused
+  uio[2]: ""             # unused
+  uio[3]: ""             # unused
+  uio[4]: ""             # unused
+  uio[5]: ""             # unused
+  uio[6]: ""             # unused
+  uio[7]: ""             # unused
 
 # Do not change!
 yaml_version: 6
