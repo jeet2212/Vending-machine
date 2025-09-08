@@ -23,14 +23,17 @@ async def test_vending_machine(dut):
     # Start clock
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
-    # Reset
+    # Reset DUT
     await reset_dut(dut)
 
-    # Test 5 + 10 = 15 → dispense
+    # --- Test 5 + 10 = 15 -> dispense ---
     dut.ui_in.value = 0b01  # coin = 5
     await ClockCycles(dut.clk, 1)
 
     dut.ui_in.value = 0b10  # coin = 10
+    await ClockCycles(dut.clk, 1)
+
+    # Give FSM one more cycle to transition to DISP
     await ClockCycles(dut.clk, 1)
 
     uo_val = safe_int(dut.uo_out.value)
@@ -39,8 +42,11 @@ async def test_vending_machine(dut):
     dut._log.info(f"After 5+10: balance={balance}, dispense={dispense}")
     assert dispense == 1, "Should dispense after reaching 15"
 
-    # Test 20 directly → dispense
+    # --- Test 20 directly -> dispense ---
     dut.ui_in.value = 0b11  # coin = 20
+    await ClockCycles(dut.clk, 1)
+
+    # Give FSM one cycle to transition to DISP
     await ClockCycles(dut.clk, 1)
 
     uo_val = safe_int(dut.uo_out.value)
