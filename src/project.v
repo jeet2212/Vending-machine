@@ -45,31 +45,31 @@ module tt_um_example (
     end
   end
 
-  // Next state logic
+  // Next state logic (lookahead balance)
   always @(*) begin
     case (state)
       IDLE: begin
-        if (balance >= 15)
+        if (balance + coin_value >= 15)
           next_state = DISP;
-        else if (balance == 5)
+        else if (balance + coin_value == 5)
           next_state = S5;
-        else if (balance == 10)
+        else if (balance + coin_value == 10)
           next_state = S10;
         else
           next_state = IDLE;
       end
       S5: begin
-        if (balance >= 15)
+        if (balance + coin_value >= 15)
           next_state = DISP;
-        else if (balance == 10)
+        else if (balance + coin_value == 10)
           next_state = S10;
         else
           next_state = S5;
       end
       S10: begin
-        if (balance >= 15)
+        if (balance + coin_value >= 15)
           next_state = DISP;
-        else if (balance == 5)
+        else if (balance + coin_value == 5)
           next_state = S5;
         else
           next_state = S10;
@@ -78,6 +78,7 @@ module tt_um_example (
       default: next_state = IDLE;
     endcase
   end
+
 
   // Outputs
   assign uo_out[0]   = (state == DISP);
