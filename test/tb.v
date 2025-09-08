@@ -14,7 +14,7 @@ module tb;
     wire [7:0] uio_oe;
 
     // Instantiate DUT
-    tt_um_vending_machine dut (
+    tt_um_example dut (
         .clk(clk),
         .rst_n(rst_n),
         .ena(ena),
