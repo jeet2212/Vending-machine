@@ -13,21 +13,22 @@ def safe_int(value):
 
 async def reset_dut(dut):
     dut.rst_n.value = 0
+    dut.ui_in.value = 0
     await ClockCycles(dut.clk, 2)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 1)
 
 
 async def check_dispense(dut, msg):
-    """Wait 1 cycle and check that dispense is asserted for exactly 1 cycle."""
-    await ClockCycles(dut.clk, 1)
+    """Check that dispense goes high exactly one cycle after enough coins."""
+    await ClockCycles(dut.clk, 1)  # FSM transitions into DISP here
     uo_val = safe_int(dut.uo_out.value)
     balance = uo_val >> 1
     dispense = uo_val & 1
     dut._log.info(f"{msg}: balance={balance}, dispense={dispense}")
     assert dispense == 1, f"{msg} -> expected dispense=1"
 
-    # Next cycle dispense should return to 0
+    # One more cycle: dispense should clear
     await ClockCycles(dut.clk, 1)
     uo_val = safe_int(dut.uo_out.value)
     dispense = uo_val & 1
@@ -42,13 +43,14 @@ async def test_vending_machine(dut):
     # Reset DUT
     await reset_dut(dut)
 
-    # --- Test 5 + 10 = 15 -> dispense ---
-    dut.ui_in.value = 0b01  # coin = 5
+    # --- Insert 5 ---
+    dut.ui_in.value = 0b01
     await ClockCycles(dut.clk, 1)
 
-    dut.ui_in.value = 0b10  # coin = 10
+    # --- Insert 10 (total=15 → should dispense next cycle) ---
+    dut.ui_in.value = 0b10
     await check_dispense(dut, "After 5+10")
 
-    # --- Test 20 directly -> dispense ---
-    dut.ui_in.value = 0b11  # coin = 20
+    # --- Insert 20 directly (should dispense next cycle) ---
+    dut.ui_in.value = 0b11
     await check_dispense(dut, "After 20")
