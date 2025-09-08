@@ -15,7 +15,7 @@ module tt_um_example (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  // FSM state encoding (plain Verilog)
+  // FSM state encoding
   parameter IDLE = 2'b00;
   parameter S5   = 2'b01;
   parameter S10  = 2'b10;
@@ -31,7 +31,7 @@ module tt_um_example (
                       (coin == 2'b10) ? 8'd10 :
                       (coin == 2'b11) ? 8'd20 : 8'd0;
 
-  // Sequential state update
+  // Sequential state + balance update
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       state   <= IDLE;
@@ -45,7 +45,7 @@ module tt_um_example (
     end
   end
 
-  // Next state logic (lookahead balance)
+  // Next state logic
   always @(*) begin
     case (state)
       IDLE: begin
@@ -79,10 +79,8 @@ module tt_um_example (
     endcase
   end
 
-
-  // Outputs
-  assign uo_out[0]   = (state == DISP);
-  assign uo_out[7:1] = balance[6:0];
+  // Outputs with safe reset (prevents X in gate-level sim)
+  assign uo_out = (!rst_n) ? 8'b0 : {balance[6:0], (state == DISP)};
 
   // Unused IOs
   assign uio_out = 0;
