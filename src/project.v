@@ -74,13 +74,7 @@ module tt_um_example (
         else
           next_state = S10;
       end
-      DISP: begin
-            dispense <= 1;
-            if (!dispense) begin
-                balance <= 0;
-                state <= IDLE;
-            end
-        end
+      DISP: next_state = IDLE;
       default: next_state = IDLE;
     endcase
   end
