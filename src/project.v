@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2024
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,23 +15,21 @@ module tt_um_example (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  // FSM states
-  typedef enum logic [1:0] {
-    IDLE   = 2'b00,
-    S5     = 2'b01,
-    S10    = 2'b10,
-    DISP   = 2'b11
-  } state_t;
+  // FSM state encoding (plain Verilog)
+  parameter IDLE = 2'b00;
+  parameter S5   = 2'b01;
+  parameter S10  = 2'b10;
+  parameter DISP = 2'b11;
 
-  state_t state, next_state;
+  reg [1:0] state, next_state;
   reg [7:0] balance;
 
   // Coin input (ui_in[1:0])
   wire [1:0] coin = ui_in[1:0];
-  wire [7:0] coin_value =
-        (coin == 2'b01) ? 8'd5  :
-        (coin == 2'b10) ? 8'd10 :
-        (coin == 2'b11) ? 8'd20 : 8'd0;
+  wire [7:0] coin_value;
+  assign coin_value = (coin == 2'b01) ? 8'd5  :
+                      (coin == 2'b10) ? 8'd10 :
+                      (coin == 2'b11) ? 8'd20 : 8'd0;
 
   // Sequential state update
   always @(posedge clk or negedge rst_n) begin
@@ -51,19 +48,38 @@ module tt_um_example (
   // Next state logic
   always @(*) begin
     case (state)
-      IDLE:   next_state = (balance >= 15) ? DISP :
-                           (balance == 5)  ? S5   :
-                           (balance == 10) ? S10  : IDLE;
-      S5:     next_state = (balance >= 15) ? DISP :
-                           (balance == 10) ? S10  : S5;
-      S10:    next_state = (balance >= 15) ? DISP :
-                           (balance == 5)  ? S5   : S10;
-      DISP:   next_state = IDLE;
+      IDLE: begin
+        if (balance >= 15)
+          next_state = DISP;
+        else if (balance == 5)
+          next_state = S5;
+        else if (balance == 10)
+          next_state = S10;
+        else
+          next_state = IDLE;
+      end
+      S5: begin
+        if (balance >= 15)
+          next_state = DISP;
+        else if (balance == 10)
+          next_state = S10;
+        else
+          next_state = S5;
+      end
+      S10: begin
+        if (balance >= 15)
+          next_state = DISP;
+        else if (balance == 5)
+          next_state = S5;
+        else
+          next_state = S10;
+      end
+      DISP: next_state = IDLE;
       default: next_state = IDLE;
     endcase
   end
 
-  // Output: product dispense on uo_out[0], balance debug on uo_out[7:1]
+  // Outputs
   assign uo_out[0]   = (state == DISP);
   assign uo_out[7:1] = balance[6:0];
 
